@@ -52,6 +52,8 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
 
 RUN mkdir /var/run/sshd \
  && echo "ulimit -n 40000" >> /etc/profile \
+ && mount –o remount,rw / \
+ && chattr -i /etc/passwd /etc/shadow \
  && echo "$NB_USER:123456"|chpasswd \
  && echo "root:123456"|chpasswd 
 
