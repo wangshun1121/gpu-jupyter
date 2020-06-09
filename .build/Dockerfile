@@ -16,7 +16,7 @@ LABEL maintainer="Christoph Schranz <christoph.schranz@salzburgresearch.at>"
 ARG ROOT_CONTAINER=ubuntu:bionic-20200112@sha256:bc025862c3e8ec4a8754ea4756e33da6c41cba38330d7e324abd25c8e0b93300
 
 LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
-ARG NB_USER="jovyan"
+ARG NB_USER="imp"
 ARG NB_UID="1000"
 ARG NB_GID="100"
 
@@ -28,16 +28,32 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
     wget \
+    build-essential \
+    zlib1g-dev \
+    unzip \
+    less \
+    default-jre \
+    default-jdk \
+    vim \
+    perl \
+    perl-base \
     bzip2 \
     ca-certificates \
     sudo \
     locales \
     fonts-liberation \
     run-one \
+    openssh-server \
+    openssh-client \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
+
+RUN mkdir /var/run/sshd \
+ && echo "ulimit -n 40000" >> /etc/profile \
+ && echo "$NB_USER:123456"|chpasswd \
+ && echo "root:123456"|chpasswd 
 
 # Configure environment
 ENV CONDA_DIR=/opt/conda \
@@ -435,3 +451,6 @@ USER $NB_UID
 
 # Copy jupyter_notebook_config.json
 COPY jupyter_notebook_config.json /etc/jupyter/
+
+USER root
+ENTRYPOINT /usr/sbin/sshd -D
