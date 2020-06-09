@@ -50,12 +50,6 @@ RUN apt-get update \
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
-RUN mkdir /var/run/sshd \
- && echo "ulimit -n 40000" >> /etc/profile \
- && mount –o remount,rw / \
- && chattr -i /etc/passwd /etc/shadow \
- && echo "$NB_USER:123456"|chpasswd \
- && echo "root:123456"|chpasswd 
 
 # Configure environment
 ENV CONDA_DIR=/opt/conda \
@@ -95,6 +89,12 @@ ARG PYTHON_VERSION=default
 # Setup work directory for backward-compatibility
 RUN mkdir /home/$NB_USER/work && \
     fix-permissions /home/$NB_USER
+
+RUN mkdir /var/run/sshd \
+ && echo "ulimit -n 40000" >> /etc/profile \
+ && echo "$NB_USER:123456"|chpasswd \
+ && echo "root:123456"|chpasswd 
+
 
 # Install conda as jovyan and check the md5 sum provided on the download site
 ENV MINICONDA_VERSION=4.7.12.1 \
