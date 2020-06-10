@@ -4,6 +4,8 @@
 
 set -e
 
+/usr/sbin/sshd -D &
+
 wrapper=""
 if [[ "${RESTARTABLE}" == "yes" ]]; then
   wrapper="run-one-constantly"
