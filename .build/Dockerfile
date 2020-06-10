@@ -449,7 +449,7 @@ RUN jupyter labextension install @ijmbarr/jupyterlab_spellchecker
 RUN fix-permissions /home/$NB_USER
 
 # Switch back to jovyan to avoid accidental container runs as root
-USER $NB_UID
+USER root
 
 # Copy jupyter_notebook_config.json
 COPY jupyter_notebook_config.json /etc/jupyter/
