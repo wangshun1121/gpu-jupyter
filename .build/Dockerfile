@@ -1,6 +1,6 @@
 # Use NVIDIA CUDA as base image and run the same installation as in the other packages.
 # The version of cudatoolkit must match those of the base image, see Dockerfile.pytorch
-FROM nvidia/cuda:10.1-base-ubuntu18.04
+FROM nvidia/cuda:10.1-base-ubuntu18.04 as primary
 LABEL maintainer="Christoph Schranz <christoph.schranz@salzburgresearch.at>"
 # The maintainers of subsequent sections may vary
 
@@ -28,16 +28,28 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
  && apt-get install -yq --no-install-recommends \
     wget \
+    build-essential \
+    zlib1g-dev \
+    unzip \
+    less \
+    default-jre \
+    default-jdk \
+    vim \
+    perl \
+    perl-base \
     bzip2 \
     ca-certificates \
     sudo \
     locales \
     fonts-liberation \
     run-one \
+    openssh-server \
+    openssh-client \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
+
 
 # Configure environment
 ENV CONDA_DIR=/opt/conda \
@@ -69,6 +81,12 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     chmod g+w /etc/passwd && \
     fix-permissions $HOME && \
     fix-permissions "$(dirname $CONDA_DIR)"
+
+RUN mkdir /var/run/sshd \
+ && echo "ulimit -n 40000" >> /etc/profile \
+ && echo "$NB_USER:123456"|chpasswd \
+ && echo "root:123456"|chpasswd 
+
 
 USER $NB_UID
 WORKDIR $HOME
@@ -149,7 +167,7 @@ USER $NB_UID
 ############################################################################
 ################# Dependency: jupyter/minimal-notebook #####################
 ############################################################################
-
+FROM primary as jupyter
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -267,7 +285,7 @@ USER $NB_UID
 ############################################################################
 ################ Dependency: jupyter/datascience-notebook ##################
 ############################################################################
-
+FROM jupyter as datascience
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -385,7 +403,7 @@ RUN conda clean --all -f -y && \
 ############################################################################
 ############################ Useful packages ###############################
 ############################################################################
-
+FROM datascience
 LABEL maintainer="Christoph Schranz <christoph.schranz@salzburgresearch.at>"
 
 # Update conda
@@ -435,3 +453,6 @@ USER $NB_UID
 
 # Copy jupyter_notebook_config.json
 COPY jupyter_notebook_config.json /etc/jupyter/
+
+USER root
+ENTRYPOINT /usr/sbin/sshd -D
