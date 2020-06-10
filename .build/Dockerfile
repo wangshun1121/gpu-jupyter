@@ -453,6 +453,3 @@ USER $NB_UID
 
 # Copy jupyter_notebook_config.json
 COPY jupyter_notebook_config.json /etc/jupyter/
-
-USER root
-ENTRYPOINT /usr/sbin/sshd -D && start-notebook.sh
