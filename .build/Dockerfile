@@ -85,8 +85,8 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
 RUN mkdir /var/run/sshd \
  && echo "ulimit -n 40000" >> /etc/profile \
  && echo "$NB_USER:123456"|chpasswd \
+ && echo "$NB_USER ALL=(ALL:ALL) ALL" >> /etc/sudoers \
  && echo "root:123456"|chpasswd 
-
 
 USER $NB_UID
 WORKDIR $HOME
